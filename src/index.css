@@ -1,0 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Bungee&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Stack+Sans+Headline:wght@200..700&family=Stack+Sans+Notch:wght@200..700&display=swap");
+
+@import "tailwindcss";
+
+h2 {
+  font-family: "Bricolage Grotesque", sans-serif;
+}
+p {
+  font-family: "Bricolage Grotesque", sans-serif;
+}
+
+/* .divU::before {
+  content: "";
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 0;
+  height: 100%;
+  background: blue;
+  right: 0;
+  bottom: 0;
+}
+.divU:hover::before {
+  width: 100%;
+} */
