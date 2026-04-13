@@ -1,16 +1,64 @@
-# React + Vite
+# Mordyn — E-Commerce Storefront
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive e-commerce frontend built with React and Vite. Mordyn lets users browse a product catalog, filter by category and price, sort listings, and manage a shopping cart.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Product catalog** — 16 products across Electronics, Accessories, Bags, and Clothes categories
+- **Filtering & sorting** — filter by category, set a price range, and sort by popularity, price, or newest
+- **Shopping cart** — add/remove items with a persistent cart context
+- **Responsive layout** — mobile-first design using Tailwind CSS
+- **Smooth animations** — powered by Framer Motion
+- **Client-side routing** — Home, Shop, and Cart pages via React Router
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Tool | Purpose |
+|---|---|
+| React 19 | UI framework |
+| Vite 8 | Dev server & bundler |
+| Tailwind CSS 4 | Styling |
+| React Router 7 | Client-side routing |
+| Framer Motion | Animations |
+| Lucide React | Icons |
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Prerequisites:** Node.js 18+
+
+```bash
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview the production build
+npm run preview
+```
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── Header.jsx       # Navigation bar with cart icon
+│   └── Footer.jsx       # Site footer
+├── context/
+│   └── CartContext.jsx  # Global cart state
+├── lib/
+│   └── product.js       # Product data
+└── pages/
+    ├── Home.jsx         # Landing page
+    ├── Shop.jsx         # Full catalog with filters
+    └── CartPage.jsx     # Cart review & checkout
+```
+
+## Pages
+
+- `/` or `/home` — Hero section and featured products
+- `/shop` — Full catalog with category filter, price range slider, and sort dropdown
+- `/cart` — Cart summary with item management
