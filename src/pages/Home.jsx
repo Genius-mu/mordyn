@@ -17,10 +17,11 @@ const Home = () => {
 
   return (
     <>
-      <section className="py-[15%] flex justify-center items-center lg:py-[1%] bg-gradient-to-br from-blue-600 to-blue-800 mt-[5em]">
+      {/* <section className="py-[15%] flex justify-center items-center lg:py-[1%] bg-gradient-to-br from-blue-600 to-blue-800 mt-[5em]"> */}
+      <section className="py-[15%] flex justify-center items-center lg:py-[1%] bg-[url(/images/img2.webp)] bg-[rgba(0,0,0,.5)] bg-blend-darken mt-[5em] bg-center rounded-br-[20%] bg-cover">
         <div className="w-[90%] flex justify-center items-center flex-col lg:flex-row gap-y-5">
           <div className="w-full flex flex-col justify-center items-center lg:items-start gap-y-2">
-            <span className="text-white text-[16px] uppercase rounded-4xl px-10 border border-gray-100/40 shadow-2xl py-2 bg-[rgba(0,0,0,.2)]">
+            <span className="text-white text-[14px] uppercase rounded-4xl px-10 border border-gray-100/40 shadow-2xl py-2 bg-[rgba(0,0,0,.1)] backdrop-blur-xl">
               premium collection
             </span>
             <h2 className="text-4xl font-bold text-white">
@@ -32,7 +33,7 @@ const Home = () => {
             </p>
             <Link
               to=""
-              className="text-blue-700 bg-white py-3 px-10 font-medium text-[16px] rounded-xl shadow-2xl hover:scale-105 transform transition duration-300 ease-in-out"
+              className="text-blue-700 bg-white py-3 px-10 font-medium text-[16px] rounded-xl shadow-2xl hover:scale-105 transform transition duration-300 ease-in-out hover:bg-blue-600 hover:text-white"
             >
               Explore Now
             </Link>
@@ -40,7 +41,7 @@ const Home = () => {
           <div className="w-full flex justify-center items-center h-full lg:h-[30em]">
             <img
               src="/images/img1.webp"
-              className="w-[30em] h-full lg:h-[25em] rounded-2xl flex justify-center items-center object-center"
+              className="w-[25em] h-full lg:h-[25em] rounded-[50%] flex justify-center items-center object-center opacity-90 shadow-2xl"
               alt=""
             />
           </div>
@@ -142,14 +143,14 @@ const Home = () => {
                         <Star fill="orange" size={20} strokeWidth={0} />
                         <StarHalf fill="orange" size={20} strokeWidth={0} />
                       </span>
-                      <h2 className="text-[17px] text-black font-semibold">
+                      <h2 className="text-[15px] text-black font-semibold">
                         {SelectedCart.name}
                       </h2>
                       {/* <p className="text-black text-[13px]">
                         {SelectedCart.CartP}
                       </p> */}
                     </span>
-                    <h2 className="text-2xl font-bold text-gray-700 group-hover:text-blue-600 ">{`$${SelectedCart.price}`}</h2>
+                    <h2 className="text-xl font-bold text-gray-700 group-hover:text-blue-600 ">{`$${SelectedCart.price}`}</h2>
                   </div>
                     <span
                       className="text-3xl font-medium flex justify-center items-center text-white py-[6px] px-[15px] cursor-pointer  transition duration-300 relative w-full h-[2em]"
