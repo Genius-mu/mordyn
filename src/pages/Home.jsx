@@ -3,6 +3,7 @@ import {
   Laptop,
   Luggage,
   Shirt,
+  ShoppingCart,
   SoapDispenserDroplet,
   Star,
   StarHalf,
@@ -13,7 +14,7 @@ import { products } from "../lib/product";
 
 const Home = () => {
   const { addToCart } = useCart();
-  const firstFourProducts = products.slice(0, 4)
+  const firstFourProducts = products.slice(0, 4);
 
   return (
     <>
@@ -112,7 +113,7 @@ const Home = () => {
             </span>
             <span>
               <Link
-                to=""
+                to="/shop"
                 className="text-blue-600 uppercase font-bold text-[13px] border-b-2"
               >
                 Browse All Shop
@@ -123,41 +124,62 @@ const Home = () => {
           <div className="w-full gap-3 h-fit grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {firstFourProducts.map((SelectedCart, i) => (
               <>
-                <div
-                  key={i}
-                  className="flex flex-col h-[21em] md:h-[21em] shadow-xl border-2 border-gray-300 bg-white overflow-hidden gap-y-4 rounded-2xl group hover:-translate-y-3 transition-all duration-300"
-                >
-                  <div className="w-full h-[53%]">
+                <div className="w-full max-w-sm">
+                  <div className="relative h-96 rounded-2xl overflow-hidden group bg-white shadow-md hover:shadow-xl transition-shadow duration-300">
+                    {/* Full-size Image */}
                     <img
                       src={SelectedCart.img}
-                      className="w-full h-full grayscale-100 group-hover:grayscale-0 transition ease-in-out duration-200"
-                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      alt={SelectedCart.name}
                     />
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2">
-                    <span className="flex flex-col gap-y-1">
-                      <span className="flex">
-                        <Star fill="orange" size={20} strokeWidth={0} />
-                        <Star fill="orange" size={20} strokeWidth={0} />
-                        <Star fill="orange" size={20} strokeWidth={0} />
-                        <Star fill="orange" size={20} strokeWidth={0} />
-                        <StarHalf fill="orange" size={20} strokeWidth={0} />
-                      </span>
-                      <h2 className="text-[15px] text-black font-semibold">
+
+                    {/* Dark Overlay Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    {/* Content Overlay - Appears on Hover */}
+                    <div className="absolute inset-0 flex flex-col justify-end p-6 translate-y-6 group-hover:translate-y-0 transition-transform duration-300 pb-10">
+                      <h3 className="text-white text-xl text-shadow-[.5px_.6px_#444] font-bold mb-2 line-clamp-2">
                         {SelectedCart.name}
-                      </h2>
-                      {/* <p className="text-black text-[13px]">
-                        {SelectedCart.CartP}
-                      </p> */}
-                    </span>
-                    <h2 className="text-xl font-bold text-gray-700 group-hover:text-blue-600 ">{`$${SelectedCart.price}`}</h2>
+                      </h3>
+
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={14}
+                              className={`${
+                                i < Math.floor(SelectedCart.rating)
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-gray-400"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-white text-sm font-medium">
+                          {SelectedCart.rating}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-white text-2xl font-bold">
+                          ${SelectedCart.price}
+                        </span>
+                        <button
+                          onClick={() => addToCart(SelectedCart)}
+                          className="px-4 py-2 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 active:scale-95 transition-all duration-200 flex items-center gap-2"
+                        >
+                          <ShoppingCart size={16} />
+                          Add
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Badge */}
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      -28%
+                    </div>
                   </div>
-                    <span
-                      className="text-3xl font-medium flex justify-center items-center text-white py-[6px] px-[15px] cursor-pointer  transition duration-300 relative w-full h-[2em]"
-                      onClick={() => addToCart(SelectedCart)}
-                    >
-                      <h2 className="absolute h-full bg-[#404040] group-hover:bg-[#ff2a00] transition ease-in-out duration-300 flex justify-center items-center w-full bottom-0">+</h2>
-                    </span>
                 </div>
               </>
             ))}
@@ -169,7 +191,7 @@ const Home = () => {
           <h2 className="text-black font-bold text-4xl text-center">
             Join the Atelier
           </h2>
-          <p className="text-gray-600 max-w-[600px] text-center">
+          <p className="text-gray-600 max-w-[600px] text-center">g
             Lorem ipsum dolor sit amet consectetur, adipisicing elit. Aut
             corporis, inventore consequatur nesciunt nulla, explicabo non.
           </p>
