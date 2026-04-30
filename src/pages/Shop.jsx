@@ -39,17 +39,11 @@ const Shop = () => {
 
   return (
     <>
-      <section className="w-full h-fit flex justify-center items-center py-[5%] bg-gradient-to-br from-blue-600 to-blue-800 mt-[5em]">
+      <section className="w-full h-fit py-[20%] flex justify-center items-center py-[10%] bg-gradient-to-br from-blue-600 to-blue-800 mt-[5em]">
         <div className="w-[90%] flex justify-start items-center gap-y-5">
-          <div className="w-full flex flex-col justify-center items-start gap-y-3">
-            <Link
-              to="/"
-              className="text-white text-[14px] flex items-center gap-x-2 hover:gap-x-3 transition-all"
-            >
-              <ArrowLeft size={18} /> Back to Home
-            </Link>
+          <div className="w-full flex flex-col justify-center items-center gap-y-3">
             <h1 className="text-5xl font-bold text-white">Our Shop</h1>
-            <p className="text-white text-lg max-w-[600px]">
+            <p className="text-white text-lg max-w-[330px] sm:max-w-[600px] text-center">
               Explore our entire collection of premium products. Find exactly
               what you're looking for with our advanced filters and sorting
               options.
@@ -67,7 +61,7 @@ const Shop = () => {
               <h3 className="text-gray-800 font-bold text-[15px]">
                 CATEGORIES
               </h3>
-              <div className="flex flex-wrap gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 flex-wrap gap-3">
                 {categories.map((cat) => (
                   <button
                     key={cat.value}
@@ -86,56 +80,62 @@ const Shop = () => {
 
             {/* Sort Dropdown */}
             <div className="w-full lg:w-fit relative">
-  <h3 className="text-gray-800 font-bold text-[15px] mb-3">
-    SORT BY
-  </h3>
-  <div className="relative group">
-    <button
-      className="w-full lg:w-[200px] px-6 py-3 rounded-xl font-medium bg-white border-2 border-gray-300 text-gray-800 hover:border-blue-600 transition-all flex items-center justify-between group-hover:shadow-lg"
-    >
-      <span className="text-sm">
-        {sortBy === "popular" && "Most Popular"}
-        {sortBy === "price-low" && "Price: Low to High"}
-        {sortBy === "price-high" && "Price: High to Low"}
-        {sortBy === "newest" && "Newest First"}
-        {sortBy === "rating" && "Highest Rated"}
-        {sortBy === "discount" && "Best Discount"}
-      </span>
-      <ChevronDown
-        size={20}
-        className="text-gray-600 group-hover:text-blue-600 transition-transform group-hover:rotate-180 duration-300"
-      />
-    </button>
+              <h3 className="text-gray-800 font-bold text-[15px] mb-3">
+                SORT BY
+              </h3>
+              <div className="relative group">
+                <button className="w-full lg:w-[200px] px-6 py-3 rounded-xl font-medium bg-white border-2 border-gray-300 text-gray-800 hover:border-blue-600 transition-all flex items-center justify-between group-hover:shadow-lg">
+                  <span className="text-sm">
+                    {sortBy === "popular" && "Most Popular"}
+                    {sortBy === "price-low" && "Price: Low to High"}
+                    {sortBy === "price-high" && "Price: High to Low"}
+                    {sortBy === "newest" && "Newest First"}
+                    {sortBy === "rating" && "Highest Rated"}
+                    {sortBy === "discount" && "Best Discount"}
+                  </span>
+                  <ChevronDown
+                    size={20}
+                    className="text-gray-600 group-hover:text-blue-600 transition-transform group-hover:rotate-180 duration-300"
+                  />
+                </button>
 
-    {/* Dropdown Menu */}
-    <div className="absolute top-full left-0 w-full mt-2 bg-white border-2 border-gray-300 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-      {[
-        { value: "popular", label: "Most Popular", icon: "⭐" },
-        { value: "price-low", label: "Price: Low to High", icon: "💰" },
-        { value: "price-high", label: "Price: High to Low", icon: "💸" },
-        { value: "newest", label: "Newest First", icon: "✨" },
-        { value: "rating", label: "Highest Rated", icon: "🌟" },
-        { value: "discount", label: "Best Discount", icon: "🎉" },
-      ].map((option) => (
-        <button
-          key={option.value}
-          onClick={() => setSortBy(option.value)}
-          className={`w-full px-6 py-3 text-left font-medium transition-all duration-200 flex items-center gap-3 border-b border-gray-100 last:border-b-0 hover:bg-blue-50 ${
-            sortBy === option.value
-              ? "bg-blue-100 text-blue-600"
-              : "text-gray-800 hover:text-blue-600"
-          }`}
-        >
-          <span className="text-lg">{option.icon}</span>
-          <span className="flex-1">{option.label}</span>
-          {sortBy === option.value && (
-            <span className="text-blue-600 font-bold">✓</span>
-          )}
-        </button>
-      ))}
-    </div>
-  </div>
-</div>
+                {/* Dropdown Menu */}
+                <div className="absolute top-full left-0 w-full mt-2 bg-white border-2 border-gray-300 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                  {[
+                    { value: "popular", label: "Most Popular", icon: "⭐" },
+                    {
+                      value: "price-low",
+                      label: "Price: Low to High",
+                      icon: "💰",
+                    },
+                    {
+                      value: "price-high",
+                      label: "Price: High to Low",
+                      icon: "💸",
+                    },
+                    { value: "newest", label: "Newest First", icon: "✨" },
+                    { value: "rating", label: "Highest Rated", icon: "🌟" },
+                    { value: "discount", label: "Best Discount", icon: "🎉" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setSortBy(option.value)}
+                      className={`w-full px-6 py-3 text-left font-medium transition-all duration-200 flex items-center gap-3 border-b border-gray-100 last:border-b-0 hover:bg-blue-50 ${
+                        sortBy === option.value
+                          ? "bg-blue-100 text-blue-600"
+                          : "text-gray-800 hover:text-blue-600"
+                      }`}
+                    >
+                      <span className="text-lg">{option.icon}</span>
+                      <span className="flex-1">{option.label}</span>
+                      {sortBy === option.value && (
+                        <span className="text-blue-600 font-bold">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Price Range Filter */}
@@ -175,50 +175,62 @@ const Shop = () => {
             </h3>
             <div className="w-full gap-6 h-fit grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {sortedProducts.map((product, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col h-[21em] md:h-[21em] shadow-xl border-2 border-gray-300 bg-white overflow-hidden gap-y-4 rounded-2xl group hover:-translate-y-3 transition-all duration-300"
-                >
-                  <div className="w-full h-[53%] relative overflow-hidden bg-gray-200">
+                <div className="w-full max-w-sm" key={i}>
+                  <div className="relative h-96 rounded-2xl overflow-hidden group bg-white shadow-md hover:shadow-xl transition-shadow duration-300">
+                    {/* Full-size Image */}
                     <img
                       src={product.img}
-                      className="w-full h-full grayscale-100 group-hover:grayscale-0 transition ease-in-out duration-200 object-cover"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       alt={product.name}
                     />
-                    <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-lg font-semibold text-sm">
-                      {Math.round(Math.random() * 40 + 10)}% OFF
+
+                    {/* Dark Overlay Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    {/* Content Overlay - Appears on Hover */}
+                    <div className="absolute inset-0 flex flex-col justify-end p-6 translate-y-6 group-hover:translate-y-0 transition-transform duration-300 pb-10">
+                      <h3 className="text-white text-xl text-shadow-[.5px_.6px_#444] font-semibold md:font-bold mb-2 line-clamp-2">
+                        {product.name}
+                      </h3>
+
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={14}
+                              className={`${
+                                i < Math.floor(product.rating)
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-gray-400"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-white text-sm font-medium">
+                          {product.rating}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-white text-xl md:text-2xl font-bold">
+                          ${product.price}
+                        </span>
+                        <button
+                          onClick={() => addToCart(product)}
+                          className="px-4 py-2 bg-white hover:bg-blue-600 hover:text-white text-gray-900 font-semibold rounded-lg active:scale-95 transition-all duration-200 flex items-center gap-2"
+                        >
+                          <ShoppingCart size={16} />
+                          Add
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Badge */}
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      -28%
                     </div>
                   </div>
-
-                  <div className="flex justify-between items-start px-4 py-2 flex-1">
-                    <span className="flex flex-col gap-y-2">
-                      <span className="flex">
-                        <Star fill="orange" size={18} strokeWidth={0} />
-                        <Star fill="orange" size={18} strokeWidth={0} />
-                        <Star fill="orange" size={18} strokeWidth={0} />
-                        <Star fill="orange" size={18} strokeWidth={0} />
-                        <StarHalf fill="orange" size={18} strokeWidth={0} />
-                      </span>
-                      <h2 className="text-[15px] text-black font-semibold max-w-[150px]">
-                        {product.name}
-                      </h2>
-                      <p className="text-gray-600 text-xs">
-                        {product.category}
-                      </p>
-                    </span>
-                    <h2 className="text-xl font-bold text-gray-700 group-hover:text-blue-600">
-                      ${product.price}
-                    </h2>
-                  </div>
-
-                  <span
-                    className="text-3xl font-medium flex justify-center items-center text-white py-[6px] px-[15px] cursor-pointer transition duration-300 relative w-full h-[2em]"
-                    onClick={() => addToCart(product)}
-                  >
-                    <h2 className="absolute h-full bg-[#404040] group-hover:bg-[#ff2a00] transition ease-in-out duration-300 flex justify-center items-center w-full bottom-0">
-                      +
-                    </h2>
-                  </span>
                 </div>
               ))}
             </div>
