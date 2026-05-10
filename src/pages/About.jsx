@@ -425,7 +425,7 @@ const About = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/20">
             {stats.map((s, i) => (
               <Reveal key={s.label} delay={i * 80}>
-                <div className="px-6 md:px-8 first:pl-0 last:pr-0 text-center md:text-left">
+                <div className="px-6 md:px-8 flex justify-center flex-col items-center first:pl-0 last:pr-0 text-center md:text-left">
                   <div className="font-serif text-5xl md:text-6xl lg:text-7xl leading-none mb-3">
                     {s.number}
                   </div>
