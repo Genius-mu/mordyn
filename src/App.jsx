@@ -10,7 +10,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/Faq";
 import Checkout from "./pages/Checkout";
-
+import NotFound from "./components/NotFound";
 
 function App() {
   return (
@@ -27,6 +27,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/*" element={<NotFound />} />
         </Routes>
         <Footer />
       </div>
