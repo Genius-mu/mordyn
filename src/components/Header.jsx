@@ -127,7 +127,7 @@ const Header = () => {
                       {label}
                       <span
                         className={`absolute -bottom-1 left-0 h-px bg-[#ff4500] transition-all duration-300 ${
-                          active ? "w-full" : "w-0 group-hover:w-full"
+                          active ? "w-0" : "w-full group-hover:w-full"
                         }`}
                       />
                     </span>
