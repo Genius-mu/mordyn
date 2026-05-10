@@ -1,265 +1,538 @@
 import {
-  ArrowLeft,
   ChevronDown,
   Star,
-  StarHalf,
   ShoppingCart,
+  SlidersHorizontal,
+  X,
+  Search,
+  ArrowUpRight,
+  Check,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { products } from "../lib/product";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+/* -------------------------------------------------------------------------- */
+/*  Reveal hook (matches Home for consistency)                                */
+/* -------------------------------------------------------------------------- */
+const useReveal = () => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(node);
+        }
+      },
+      { threshold: 0.12 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, visible];
+};
+
+const Reveal = ({ children, delay = 0, className = "" }) => {
+  const [ref, visible] = useReveal();
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-[800ms] ease-out ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Static config                                                             */
+/* -------------------------------------------------------------------------- */
+const CATEGORIES = [
+  { name: "Everything", value: "all" },
+  { name: "Electronics", value: "electronics" },
+  { name: "Accessories", value: "accessories" },
+  { name: "Bags", value: "bags" },
+  { name: "Clothes", value: "clothes" },
+];
+
+const SORT_OPTIONS = [
+  { value: "popular", label: "Most popular" },
+  { value: "price-low", label: "Price: low to high" },
+  { value: "price-high", label: "Price: high to low" },
+  { value: "newest", label: "Newest first" },
+  { value: "rating", label: "Highest rated" },
+];
+
+/* -------------------------------------------------------------------------- */
+/*  Component                                                                 */
+/* -------------------------------------------------------------------------- */
 const Shop = () => {
   const { addToCart } = useCart();
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("popular");
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceMax, setPriceMax] = useState(500);
+  const [search, setSearch] = useState("");
+  const [sortOpen, setSortOpen] = useState(false);
 
-  const categories = [
-    { name: "All Products", value: "all" },
-    { name: "Electronics", value: "electronics" },
-    { name: "Accessories", value: "accessories" },
-    { name: "Bags", value: "bags" },
-    { name: "Clothes", value: "clothes" },
-  ];
+  const sortRef = useRef(null);
 
-  const filteredProducts =
-    selectedCategory === "all"
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+  // Close sort dropdown on outside click / escape — fixes the original
+  // hover-only menu that broke on touch devices.
+  useEffect(() => {
+    const onDown = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) {
+        setSortOpen(false);
+      }
+    };
+    const onKey = (e) => e.key === "Escape" && setSortOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (sortBy === "popular") return b.rating - a.rating;
-    if (sortBy === "price-low") return a.price - b.price;
-    if (sortBy === "price-high") return b.price - a.price;
-    if (sortBy === "newest") return b.id - a.id;
-    return 0;
-  });
+  // Filter + sort. The original Shop computed priceRange but never applied
+  // it — fixed here so the slider actually narrows the grid.
+  const visibleProducts = useMemo(() => {
+    const filtered = products.filter((p) => {
+      if (selectedCategory !== "all" && p.category !== selectedCategory)
+        return false;
+      if (p.price > priceMax) return false;
+      if (
+        search.trim() &&
+        !p.name.toLowerCase().includes(search.trim().toLowerCase())
+      )
+        return false;
+      return true;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "popular" || sortBy === "rating")
+        return b.rating - a.rating;
+      if (sortBy === "price-low") return a.price - b.price;
+      if (sortBy === "price-high") return b.price - a.price;
+      if (sortBy === "newest") return (b.id ?? 0) - (a.id ?? 0);
+      return 0;
+    });
+  }, [selectedCategory, sortBy, priceMax, search]);
+
+  const activeFilterCount =
+    (selectedCategory !== "all" ? 1 : 0) +
+    (priceMax < 500 ? 1 : 0) +
+    (search ? 1 : 0);
+
+  const resetAll = () => {
+    setSelectedCategory("all");
+    setPriceMax(500);
+    setSearch("");
+    setSortBy("popular");
+  };
+
+  const currentSortLabel =
+    SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? "Sort";
 
   return (
-    <>
-      <section className="w-full h-fit py-[20%] flex justify-center items-center py-[10%] bg-gradient-to-br from-blue-600 to-blue-800 mt-[5em]">
-        <div className="w-[90%] flex justify-start items-center gap-y-5">
-          <div className="w-full flex flex-col justify-center items-center gap-y-3">
-            <h1 className="text-5xl font-bold text-white">Our Shop</h1>
-            <p className="text-white text-lg max-w-[330px] sm:max-w-[600px] text-center">
-              Explore our entire collection of premium products. Find exactly
-              what you're looking for with our advanced filters and sorting
-              options.
-            </p>
+    <div className="bg-white text-neutral-900 selection:bg-[#ff4500] selection:text-white">
+      {/* ============================== HERO ============================== */}
+      <section className="relative mt-[5em] overflow-hidden bg-neutral-950 text-white">
+        {/* Layered orangered atmosphere */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#ff4500] via-[#cc3700] to-neutral-950" />
+        <div
+          className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
+        <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-[#ff4500]/30 blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 hidden lg:grid grid-cols-12 pointer-events-none">
+          {[...Array(13)].map((_, i) => (
+            <div key={i} className="border-l border-white/[0.06] h-full" />
+          ))}
+        </div>
+
+        <div className="relative max-w-[1400px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
+          <Reveal>
+            <div className="inline-flex items-center gap-3 mb-6">
+              <span className="h-px w-10 bg-white/80" />
+              <span className="text-[11px] tracking-[0.35em] uppercase font-medium">
+                The Catalogue
+              </span>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-8">
+              <Reveal delay={100}>
+                <h1 className="font-serif text-5xl md:text-7xl lg:text-[6rem] leading-[0.95] tracking-tight">
+                  Everything,
+                  <br />
+                  <em className="italic font-light">in one place.</em>
+                </h1>
+              </Reveal>
+            </div>
+            <div className="lg:col-span-4">
+              <Reveal delay={250}>
+                <p className="text-white/80 text-base lg:text-lg leading-relaxed max-w-md">
+                  The full collection — filterable by category, price, and
+                  whatever else you can think of. {products.length} pieces, all
+                  hand-picked.
+                </p>
+              </Reveal>
+            </div>
           </div>
+
+          {/* Search bar tucked into the hero */}
+          <Reveal delay={400}>
+            <div className="mt-12 max-w-2xl">
+              <div className="relative">
+                <Search
+                  className="absolute left-5 top-1/2 -translate-y-1/2 text-white/60"
+                  size={18}
+                  strokeWidth={1.5}
+                />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search the catalogue…"
+                  className="w-full bg-white/10 backdrop-blur-sm border border-white/25 text-white placeholder:text-white/50 pl-14 pr-14 py-4 rounded-full outline-none focus:border-white focus:bg-white/15 transition-colors"
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-white/60 hover:text-white transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <X size={18} strokeWidth={1.5} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      <section className="w-full flex justify-center items-center py-[5%]">
-        <div className="w-[90%] flex flex-col gap-y-8">
-          {/* Filters and Sorting */}
-          <div className="w-full flex flex-col lg:flex-row justify-between items-start lg:items-center gap-y-5 lg:gap-x-5">
-            {/* Category Filter */}
-            <div className="w-full lg:w-fit flex flex-col gap-y-3">
-              <h3 className="text-gray-800 font-bold text-[15px]">
-                CATEGORIES
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 flex-wrap gap-3">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.value}
-                    onClick={() => setSelectedCategory(cat.value)}
-                    className={`px-6 py-2 rounded-xl font-medium transition-all transform duration-300 ${
-                      selectedCategory === cat.value
-                        ? "bg-blue-600 text-white shadow-lg"
-                        : "bg-white border-2 border-gray-300 text-gray-800 hover:border-blue-600"
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Sort Dropdown */}
-            <div className="w-full lg:w-fit relative">
-              <h3 className="text-gray-800 font-bold text-[15px] mb-3">
-                SORT BY
-              </h3>
-              <div className="relative group">
-                <button className="w-full lg:w-[200px] px-6 py-3 rounded-xl font-medium bg-white border-2 border-gray-300 text-gray-800 hover:border-blue-600 transition-all flex items-center justify-between group-hover:shadow-lg">
-                  <span className="text-sm">
-                    {sortBy === "popular" && "Most Popular"}
-                    {sortBy === "price-low" && "Price: Low to High"}
-                    {sortBy === "price-high" && "Price: High to Low"}
-                    {sortBy === "newest" && "Newest First"}
-                    {sortBy === "rating" && "Highest Rated"}
-                    {sortBy === "discount" && "Best Discount"}
-                  </span>
-                  <ChevronDown
-                    size={20}
-                    className="text-gray-600 group-hover:text-blue-600 transition-transform group-hover:rotate-180 duration-300"
-                  />
+      {/* ====================== STICKY FILTER BAR ====================== */}
+      <div className="sticky top-[5em] z-30 bg-white/85 backdrop-blur-md border-b border-neutral-200">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm">
+            <SlidersHorizontal
+              size={15}
+              strokeWidth={1.6}
+              className="text-[#ff4500]"
+            />
+            <span className="font-medium text-neutral-950">
+              {visibleProducts.length}{" "}
+              <span className="text-neutral-500 font-normal">
+                {visibleProducts.length === 1 ? "piece" : "pieces"}
+              </span>
+            </span>
+            {activeFilterCount > 0 && (
+              <>
+                <span className="text-neutral-300">·</span>
+                <button
+                  onClick={resetAll}
+                  className="text-[#ff4500] hover:underline underline-offset-4 font-medium"
+                >
+                  Clear filters ({activeFilterCount})
                 </button>
+              </>
+            )}
+          </div>
 
-                {/* Dropdown Menu */}
-                <div className="absolute top-full left-0 w-full mt-2 bg-white border-2 border-gray-300 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                  {[
-                    { value: "popular", label: "Most Popular", icon: "⭐" },
-                    {
-                      value: "price-low",
-                      label: "Price: Low to High",
-                      icon: "💰",
-                    },
-                    {
-                      value: "price-high",
-                      label: "Price: High to Low",
-                      icon: "💸",
-                    },
-                    { value: "newest", label: "Newest First", icon: "✨" },
-                    { value: "rating", label: "Highest Rated", icon: "🌟" },
-                    { value: "discount", label: "Best Discount", icon: "🎉" },
-                  ].map((option) => (
+          {/* Sort dropdown — click-driven, with outside-click + escape close */}
+          <div className="relative" ref={sortRef}>
+            <button
+              onClick={() => setSortOpen((v) => !v)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-300 bg-white hover:border-neutral-950 transition-colors text-sm"
+              aria-haspopup="listbox"
+              aria-expanded={sortOpen}
+            >
+              <span className="text-neutral-500 hidden sm:inline">Sort:</span>
+              <span className="font-medium text-neutral-950">
+                {currentSortLabel}
+              </span>
+              <ChevronDown
+                size={15}
+                strokeWidth={1.8}
+                className={`transition-transform duration-300 ${
+                  sortOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {sortOpen && (
+              <div
+                role="listbox"
+                className="absolute right-0 top-full mt-2 w-64 bg-white border border-neutral-200 rounded-2xl shadow-2xl shadow-neutral-900/10 overflow-hidden z-50"
+              >
+                {SORT_OPTIONS.map((option) => {
+                  const active = sortBy === option.value;
+                  return (
                     <button
                       key={option.value}
-                      onClick={() => setSortBy(option.value)}
-                      className={`w-full px-6 py-3 text-left font-medium transition-all duration-200 flex items-center gap-3 border-b border-gray-100 last:border-b-0 hover:bg-blue-50 ${
-                        sortBy === option.value
-                          ? "bg-blue-100 text-blue-600"
-                          : "text-gray-800 hover:text-blue-600"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => {
+                        setSortBy(option.value);
+                        setSortOpen(false);
+                      }}
+                      className={`w-full px-5 py-3 text-left text-sm flex items-center justify-between transition-colors ${
+                        active
+                          ? "bg-[#ff4500] text-white"
+                          : "text-neutral-800 hover:bg-neutral-50 hover:text-[#ff4500]"
                       }`}
                     >
-                      <span className="text-lg">{option.icon}</span>
-                      <span className="flex-1">{option.label}</span>
-                      {sortBy === option.value && (
-                        <span className="text-blue-600 font-bold">✓</span>
-                      )}
+                      <span className="font-medium">{option.label}</span>
+                      {active && <Check size={15} strokeWidth={2} />}
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            </div>
+            )}
           </div>
+        </div>
+      </div>
 
-          {/* Price Range Filter */}
-          <div className="w-full bg-white/70 p-6 rounded-2xl">
-            <h3 className="text-gray-800 font-bold text-[15px] mb-4">
-              PRICE RANGE
-            </h3>
-            <div className="flex flex-col gap-y-4">
-              <input
-                type="range"
-                min="0"
-                max="500"
-                value={priceRange[1]}
-                onChange={(e) =>
-                  setPriceRange([priceRange[0], parseInt(e.target.value)])
-                }
-                className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <div className="flex justify-between items-center">
-                <span className="text-gray-800 font-semibold">
-                  $0 - ${priceRange[1]}
-                </span>
-                <button
-                  onClick={() => setPriceRange([0, 500])}
-                  className="text-blue-600 text-sm font-medium hover:text-blue-800"
-                >
-                  Reset
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Products Grid */}
-          <div className="w-full">
-            <h3 className="text-gray-800 font-bold text-xl mb-6">
-              Showing {sortedProducts.length} products
-            </h3>
-            <div className="w-full gap-6 h-fit grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              {sortedProducts.map((product, i) => (
-                <div className="w-full max-w-sm" key={i}>
-                  <div className="relative h-96 rounded-2xl overflow-hidden group bg-white shadow-md hover:shadow-xl transition-shadow duration-300">
-                    {/* Full-size Image */}
-                    <img
-                      src={product.img}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      alt={product.name}
-                    />
-
-                    {/* Dark Overlay Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                    {/* Content Overlay - Appears on Hover */}
-                    <div className="absolute inset-0 flex flex-col justify-end p-6 translate-y-6 group-hover:translate-y-0 transition-transform duration-300 pb-10">
-                      <h3 className="text-white text-xl text-shadow-[.5px_.6px_#444] font-semibold md:font-bold mb-2 line-clamp-2">
-                        {product.name}
-                      </h3>
-
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="flex gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              size={14}
-                              className={`${
-                                i < Math.floor(product.rating)
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "text-gray-400"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-white text-sm font-medium">
-                          {product.rating}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-white text-xl md:text-2xl font-bold">
-                          ${product.price}
-                        </span>
+      {/* ============================ MAIN ============================ */}
+      <section className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* ---------------- SIDEBAR ---------------- */}
+          <aside className="lg:col-span-3 lg:sticky lg:top-[10em] h-fit space-y-10">
+            {/* Categories */}
+            <Reveal>
+              <div>
+                <h3 className="text-[11px] tracking-[0.35em] uppercase text-[#ff4500] font-semibold mb-5">
+                  ⟢ Category
+                </h3>
+                <ul className="space-y-1">
+                  {CATEGORIES.map((cat) => {
+                    const active = selectedCategory === cat.value;
+                    const count =
+                      cat.value === "all"
+                        ? products.length
+                        : products.filter((p) => p.category === cat.value)
+                            .length;
+                    return (
+                      <li key={cat.value}>
                         <button
-                          onClick={() => addToCart(product)}
-                          className="px-4 py-2 bg-white hover:bg-blue-600 hover:text-white text-gray-900 font-semibold rounded-lg active:scale-95 transition-all duration-200 flex items-center gap-2"
+                          onClick={() => setSelectedCategory(cat.value)}
+                          className={`w-full group flex items-center justify-between py-2.5 text-left border-b transition-colors ${
+                            active
+                              ? "border-[#ff4500]"
+                              : "border-neutral-200 hover:border-neutral-950"
+                          }`}
                         >
-                          <ShoppingCart size={16} />
-                          Add
+                          <span
+                            className={`font-serif text-lg flex items-center gap-3 transition-colors ${
+                              active
+                                ? "text-[#ff4500]"
+                                : "text-neutral-950 group-hover:text-neutral-700"
+                            }`}
+                          >
+                            {active && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#ff4500]" />
+                            )}
+                            {cat.name}
+                          </span>
+                          <span
+                            className={`text-xs tabular-nums ${
+                              active ? "text-[#ff4500]" : "text-neutral-400"
+                            }`}
+                          >
+                            {String(count).padStart(2, "0")}
+                          </span>
                         </button>
-                      </div>
-                    </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </Reveal>
 
-                    {/* Badge */}
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      -28%
-                    </div>
+            {/* Price */}
+            <Reveal delay={120}>
+              <div>
+                <h3 className="text-[11px] tracking-[0.35em] uppercase text-[#ff4500] font-semibold mb-5">
+                  ⟢ Price
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-baseline justify-between font-serif">
+                    <span className="text-2xl text-neutral-950">$0</span>
+                    <span className="text-neutral-300">—</span>
+                    <span className="text-2xl text-neutral-950 tabular-nums">
+                      ${priceMax}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="500"
+                    step="10"
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(parseInt(e.target.value))}
+                    className="w-full h-1 bg-neutral-200 rounded-full appearance-none cursor-pointer accent-[#ff4500]"
+                  />
+                  <div className="flex items-center justify-between text-xs text-neutral-500">
+                    <span>Max budget</span>
+                    {priceMax < 500 && (
+                      <button
+                        onClick={() => setPriceMax(500)}
+                        className="text-[#ff4500] hover:underline underline-offset-4 font-medium"
+                      >
+                        Reset
+                      </button>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* No Products Found */}
-          {sortedProducts.length === 0 && (
-            <div className="w-full flex justify-center items-center py-20">
-              <div className="text-center flex flex-col gap-y-4">
-                <ShoppingCart size={64} className="text-gray-400 mx-auto" />
-                <h3 className="text-2xl font-bold text-gray-800">
-                  No products found
-                </h3>
-                <p className="text-gray-600 max-w-[400px]">
-                  Try adjusting your filters or categories to find what you're
-                  looking for.
-                </p>
-                <Link
-                  to="/"
-                  className="text-blue-600 font-semibold hover:text-blue-800 mt-4"
-                >
-                  Continue Shopping
-                </Link>
               </div>
-            </div>
-          )}
+            </Reveal>
+
+            {/* Promo card */}
+            <Reveal delay={240}>
+              <div className="relative rounded-2xl bg-neutral-950 text-white p-6 overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#ff4500]/30 blur-2xl pointer-events-none" />
+                <div className="relative">
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-[#ff4500] font-semibold mb-3">
+                    Members only
+                  </div>
+                  <p className="font-serif text-xl leading-snug mb-4">
+                    Get 10% off your first order when you join the dispatch.
+                  </p>
+                  <Link
+                    to="/"
+                    className="inline-flex items-center gap-1.5 text-sm border-b border-white/40 hover:border-[#ff4500] hover:text-[#ff4500] transition-colors pb-0.5"
+                  >
+                    Subscribe
+                    <ArrowUpRight size={14} strokeWidth={1.8} />
+                  </Link>
+                </div>
+              </div>
+            </Reveal>
+          </aside>
+
+          {/* ---------------- PRODUCT GRID ---------------- */}
+          <div className="lg:col-span-9">
+            {visibleProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {visibleProducts.map((product, i) => (
+                  <Reveal key={product.id ?? i} delay={(i % 6) * 60}>
+                    <article className="group">
+                      <div className="relative aspect-[4/5] bg-neutral-50 rounded-2xl overflow-hidden mb-5 border border-neutral-200">
+                        <img
+                          src={product.img}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+
+                        {/* Discount badge */}
+                        <div className="absolute top-4 left-4 bg-[#ff4500] text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-full font-semibold">
+                          −28%
+                        </div>
+
+                        {/* Quick add */}
+                        <div className="absolute inset-x-4 bottom-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                          <button
+                            onClick={() => addToCart(product)}
+                            className="w-full bg-neutral-950 text-white hover:bg-[#ff4500] active:scale-[0.98] py-3 rounded-full font-medium flex items-center justify-center gap-2 text-sm transition-all duration-300"
+                          >
+                            <ShoppingCart size={15} strokeWidth={1.8} />
+                            Quick add
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="px-1">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <h3 className="font-serif text-lg leading-snug line-clamp-2 group-hover:text-[#ff4500] transition-colors text-neutral-950">
+                            {product.name}
+                          </h3>
+                          <span className="font-serif text-lg tabular-nums whitespace-nowrap text-neutral-950">
+                            ${product.price}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, j) => (
+                              <Star
+                                key={j}
+                                size={12}
+                                strokeWidth={1.5}
+                                className={
+                                  j < Math.floor(product.rating)
+                                    ? "fill-[#ff4500] text-[#ff4500]"
+                                    : "text-neutral-300"
+                                }
+                              />
+                            ))}
+                          </div>
+                          <span className="text-xs text-neutral-500 tabular-nums">
+                            {product.rating}
+                          </span>
+                          {product.category && (
+                            <>
+                              <span className="text-neutral-300">·</span>
+                              <span className="text-xs text-neutral-500 capitalize">
+                                {product.category}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  </Reveal>
+                ))}
+              </div>
+            ) : (
+              /* Empty state */
+              <div className="border border-dashed border-neutral-300 rounded-3xl py-24 px-8 flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-[#ff4500]/10 flex items-center justify-center mb-6">
+                  <ShoppingCart
+                    size={26}
+                    strokeWidth={1.4}
+                    className="text-[#ff4500]"
+                  />
+                </div>
+                <h3 className="font-serif text-3xl text-neutral-950 mb-3">
+                  Nothing matches — yet.
+                </h3>
+                <p className="text-neutral-500 max-w-md mb-8">
+                  Try widening the price range, switching category, or clearing
+                  your search. We've got pieces for most budgets.
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <button
+                    onClick={resetAll}
+                    className="bg-[#ff4500] hover:bg-[#ff5a1f] text-white px-6 py-3 rounded-full font-medium inline-flex items-center gap-2 transition-colors shadow-[0_10px_30px_-10px_rgba(255,69,0,0.6)]"
+                  >
+                    Reset filters
+                    <ArrowUpRight size={15} strokeWidth={1.8} />
+                  </button>
+                  <Link
+                    to="/"
+                    className="border border-neutral-300 hover:border-neutral-950 text-neutral-950 px-6 py-3 rounded-full font-medium transition-colors"
+                  >
+                    Back to home
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 
