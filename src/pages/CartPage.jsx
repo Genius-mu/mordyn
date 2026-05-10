@@ -29,7 +29,7 @@ const FREE_SHIPPING_THRESHOLD = 50000; // ₦50,000
 /*  Component                                                                 */
 /* -------------------------------------------------------------------------- */
 const CartPage = () => {
-  const { cart, increment, decrement } = useCart();
+  const { cart, increment, decrement, removeItem } = useCart();
   const [selectedInfo, setSelectedInfo] = useState(null);
   const [promo, setPromo] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
@@ -54,11 +54,11 @@ const CartPage = () => {
     (subtotal / FREE_SHIPPING_THRESHOLD) * 100,
   );
 
-  const removeItem = (item) => {
-    // Original cart context only exposes `decrement`. Loop until quantity
-    // hits zero. (Better: add a `removeItem(id)` to your CartContext.)
-    for (let i = 0; i < item.quantity; i++) decrement(item.id);
-  };
+  // const removeItem = (item) => {
+  //   // Original cart context only exposes `decrement`. Loop until quantity
+  //   // hits zero. (Better: add a `removeItem(id)` to your CartContext.)
+  //   for (let i = 0; i < item.quantity; i++) decrement(item.id);
+  // };
 
   const handleApplyPromo = (e) => {
     e.preventDefault();
@@ -327,7 +327,7 @@ const CartPage = () => {
                                 </button>
                                 <motion.button
                                   whileTap={{ scale: 0.85 }}
-                                  onClick={() => removeItem(item)}
+                                  onClick={() => removeItem(item.id)}
                                   aria-label="Remove item"
                                   className="w-9 h-9 flex items-center justify-center rounded-full text-neutral-400 hover:text-[#ff4500] hover:bg-neutral-100 transition-colors"
                                 >
