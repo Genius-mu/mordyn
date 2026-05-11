@@ -12,7 +12,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -24,17 +24,21 @@ const navLinks = [
   { label: "Contact", to: "/contact", icon: Phone },
 ];
 
+const ANNOUNCEMENT_HEIGHT = 28; // px — matches h-7 (1.75rem at 16px root)
+
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { cart } = useCart();
+  const { cart, totalItems } = useCart();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const close = () => setIsOpen(false);
+  const itemCount = totalItems ?? cart.length;
 
-  // Header tightens slightly after scroll — gives a sense of arrival
+  // Scroll detection — flips header to compact translucent mode past 12px
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -51,13 +55,13 @@ const Header = () => {
     };
   }, [isOpen, searchOpen]);
 
-  // Close drawer on route change
+  // Close overlays on route change
   useEffect(() => {
     setIsOpen(false);
     setSearchOpen(false);
   }, [location.pathname]);
 
-  // Escape key closes any overlay
+  // Escape closes overlays
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
@@ -69,36 +73,69 @@ const Header = () => {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
+
   return (
     <>
-      {/* ========================== ANNOUNCEMENT BAR ========================== */}
-      <div className="hidden md:block fixed top-0 left-0 right-0 z-[51] bg-neutral-950 text-white text-[11px] tracking-[0.25em] uppercase">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 h-7 flex items-center justify-center gap-2">
+      {/* ============================ ANNOUNCEMENT BAR ============================ */}
+      {/* Slides up out of view when scrolled, taking its space with it.
+          Header moves up to fill the gap via the wrapper transform below. */}
+      <div
+        className="fixed top-0 left-0 right-0 z-[51] bg-neutral-950 text-white text-[11px] tracking-[0.25em] uppercase overflow-hidden transition-[height] duration-300 ease-out"
+        style={{ height: scrolled ? 0 : ANNOUNCEMENT_HEIGHT }}
+        aria-hidden={scrolled}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 h-7 hidden md:flex items-center justify-center gap-2">
           <span className="text-[#ff4500]">✦</span>
           <span>Free worldwide shipping on orders over $50</span>
           <span className="text-[#ff4500]">✦</span>
         </div>
       </div>
 
-      {/* ========================== HEADER ========================== */}
+      {/* ============================ HEADER ============================ */}
+      {/* Header is always `top-0` — the announcement bar pushes it down by
+          shrinking its own height. This avoids the previous jumpy "top-7 →
+          top-0" transition and the issue where the bar still occupied space
+          after scroll. */}
       <header
-        className={`fixed left-0 right-0 z-50 transition-all duration-300
-          ${scrolled ? "md:top-0 top-0" : "md:top-7 top-0"}
+        className={`fixed left-0 right-0 z-50 transition-[background-color,border-color,backdrop-filter,top] duration-300 ease-out
           ${
             scrolled
-              ? "bg-white/85 backdrop-blur-lg border-b border-neutral-200"
+              ? "bg-white/85 backdrop-blur-lg border-b border-neutral-200/80 shadow-[0_4px_20px_-12px_rgba(0,0,0,0.1)]"
               : "bg-white border-b border-transparent"
           }`}
+        style={{
+          // Sit below the announcement bar on desktop when not scrolled.
+          // On mobile the bar is hidden so always top:0.
+          top:
+            scrolled || typeof window === "undefined"
+              ? 0
+              : window.matchMedia("(min-width: 768px)").matches
+                ? ANNOUNCEMENT_HEIGHT
+                : 0,
+        }}
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
           <div
-            className={`flex justify-between items-center transition-all duration-300 ${
-              scrolled ? "h-[4.5em]" : "h-[5em]"
+            className={`flex justify-between items-center transition-[height] duration-300 ease-out ${
+              scrolled ? "h-[4.25em]" : "h-[5em]"
             }`}
           >
-            {/* Logo — serif wordmark with the accent dot */}
-            <Link to="/" className="group flex items-baseline gap-1">
-              <span className="font-serif text-2xl md:text-3xl tracking-tight text-neutral-950 group-hover:text-[#ff4500] transition-colors">
+            {/* Logo */}
+            <Link to="/" className="group flex items-baseline gap-1 shrink-0">
+              <span
+                className={`font-serif tracking-tight text-neutral-950 group-hover:text-[#ff4500] transition-all duration-300 ${
+                  scrolled
+                    ? "text-2xl md:text-[1.625rem]"
+                    : "text-2xl md:text-3xl"
+                }`}
+              >
                 Mordyn
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#ff4500] mb-1" />
@@ -115,22 +152,13 @@ const Header = () => {
                   <Link
                     key={label}
                     to={to}
-                    className={`relative px-4 py-2 text-sm font-medium transition-colors duration-200
-                      ${
-                        active
-                          ? "text-[#ff4500]"
-                          : "text-neutral-700 hover:text-neutral-950"
-                      }
-                    `}
+                    className={`relative px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                      active
+                        ? "text-[#ff4500]"
+                        : "text-neutral-700 hover:text-neutral-950"
+                    }`}
                   >
-                    <span className="relative">
-                      {label}
-                      <span
-                        className={`absolute -bottom-1 left-0 h-px bg-[#ff4500] transition-all duration-300 ${
-                          active ? "w-0" : "w-full group-hover:w-full"
-                        }`}
-                      />
-                    </span>
+                    <span>{label}</span>
                     {active && (
                       <motion.span
                         layoutId="nav-underline"
@@ -148,8 +176,8 @@ const Header = () => {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-1">
-              {/* Search button */}
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Search */}
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
@@ -158,7 +186,7 @@ const Header = () => {
                 <Search size={19} strokeWidth={1.6} />
               </button>
 
-              {/* Account button */}
+              {/* Account */}
               <button
                 aria-label="Account"
                 className="hidden sm:flex w-10 h-10 items-center justify-center rounded-full text-neutral-700 hover:text-[#ff4500] hover:bg-neutral-100 transition-colors"
@@ -169,14 +197,14 @@ const Header = () => {
               {/* Cart */}
               <Link
                 to="/cart"
-                aria-label={`Cart (${cart.length} items)`}
+                aria-label={`Cart (${itemCount} items)`}
                 className="relative w-10 h-10 flex items-center justify-center rounded-full text-neutral-700 hover:text-[#ff4500] hover:bg-neutral-100 transition-colors"
               >
                 <ShoppingCart size={19} strokeWidth={1.6} />
                 <AnimatePresence>
-                  {cart.length > 0 && (
+                  {itemCount > 0 && (
                     <motion.span
-                      key={cart.length}
+                      key={itemCount}
                       initial={{ scale: 0.5, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.5, opacity: 0 }}
@@ -186,7 +214,7 @@ const Header = () => {
                       }}
                       className="absolute top-0.5 right-0.5 bg-[#ff4500] text-white rounded-full min-w-[17px] h-[17px] flex items-center justify-center text-[10px] font-bold px-1 ring-2 ring-white tabular-nums"
                     >
-                      {cart.length}
+                      {itemCount > 99 ? "99+" : itemCount}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -195,7 +223,9 @@ const Header = () => {
               {/* Shop CTA — desktop only */}
               <Link
                 to="/shop"
-                className="hidden lg:inline-flex ml-3 items-center gap-2 bg-neutral-950 hover:bg-[#ff4500] text-white px-5 py-2.5 rounded-full text-sm font-medium transition-colors duration-300 group"
+                className={`hidden lg:inline-flex ml-3 items-center gap-2 bg-neutral-950 hover:bg-[#ff4500] text-white rounded-full text-sm font-medium transition-all duration-300 group ${
+                  scrolled ? "px-4 py-2" : "px-5 py-2.5"
+                }`}
               >
                 Shop now
                 <ArrowUpRight
@@ -205,11 +235,11 @@ const Header = () => {
                 />
               </Link>
 
-              {/* Hamburger — mobile only */}
+              {/* Hamburger */}
               <button
                 aria-label={isOpen ? "Close menu" : "Open menu"}
                 aria-expanded={isOpen}
-                className="lg:hidden ml-1 w-10 h-10 flex items-center justify-center rounded-full text-neutral-900 hover:bg-neutral-100 transition-colors relative"
+                className="lg:hidden ml-1 w-10 h-10 flex items-center justify-center rounded-full text-neutral-900 hover:bg-neutral-100 transition-colors"
                 onClick={() => setIsOpen((p) => !p)}
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -241,7 +271,7 @@ const Header = () => {
         </div>
       </header>
 
-      {/* ========================== SEARCH OVERLAY ========================== */}
+      {/* ============================ SEARCH OVERLAY ============================ */}
       <AnimatePresence>
         {searchOpen && (
           <>
@@ -264,13 +294,7 @@ const Header = () => {
             >
               <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-6">
                 <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    // Hook this up to your real search route
-                    if (searchQuery.trim()) {
-                      window.location.href = `/shop?q=${encodeURIComponent(searchQuery.trim())}`;
-                    }
-                  }}
+                  onSubmit={handleSearchSubmit}
                   className="flex items-center gap-4"
                 >
                   <Search
@@ -298,7 +322,6 @@ const Header = () => {
                     <X size={16} strokeWidth={1.8} />
                   </button>
                 </form>
-                {/* Quick suggestions */}
                 <div className="mt-5 flex flex-wrap gap-2">
                   <span className="text-[10px] tracking-[0.3em] uppercase text-neutral-500 font-semibold py-1.5 mr-1">
                     Try:
@@ -325,7 +348,7 @@ const Header = () => {
         )}
       </AnimatePresence>
 
-      {/* ========================== MOBILE DRAWER ========================== */}
+      {/* ============================ MOBILE DRAWER ============================ */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -347,7 +370,6 @@ const Header = () => {
               transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
               className="lg:hidden fixed top-0 left-0 h-full w-[80%] max-w-[340px] bg-white z-50 flex flex-col shadow-2xl"
             >
-              {/* Drawer header — orangered hero strip */}
               <div className="relative bg-neutral-950 text-white px-6 py-7 overflow-hidden">
                 <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full bg-[#ff4500]/30 blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full border border-white/10 pointer-events-none" />
@@ -379,7 +401,6 @@ const Header = () => {
                 </div>
               </div>
 
-              {/* Mobile search */}
               <div className="px-4 pt-5 pb-3">
                 <button
                   onClick={() => {
@@ -393,12 +414,10 @@ const Header = () => {
                 </button>
               </div>
 
-              {/* Eyebrow */}
               <div className="px-6 pt-3 pb-2 text-[10px] tracking-[0.3em] uppercase text-neutral-500 font-semibold">
                 ⟢ Browse
               </div>
 
-              {/* Nav links */}
               <ul className="flex flex-col px-3 gap-0.5 flex-1">
                 {navLinks.map(({ label, to, icon: Icon }, i) => {
                   const active =
@@ -419,12 +438,11 @@ const Header = () => {
                       <Link
                         to={to}
                         onClick={close}
-                        className={`relative flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium text-[15px] transition-colors duration-200
-                          ${
-                            active
-                              ? "bg-[#ff4500] text-white"
-                              : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-950"
-                          }`}
+                        className={`relative flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium text-[15px] transition-colors duration-200 ${
+                          active
+                            ? "bg-[#ff4500] text-white"
+                            : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-950"
+                        }`}
                       >
                         <Icon
                           size={17}
@@ -444,7 +462,6 @@ const Header = () => {
                 })}
               </ul>
 
-              {/* Drawer footer */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -461,9 +478,9 @@ const Header = () => {
                     View cart
                   </span>
                   <span className="flex items-center gap-2">
-                    {cart.length > 0 && (
+                    {itemCount > 0 && (
                       <span className="bg-white/20 text-white text-xs font-bold rounded-full px-2 py-0.5 tabular-nums">
-                        {cart.length}
+                        {itemCount}
                       </span>
                     )}
                     <ArrowUpRight
