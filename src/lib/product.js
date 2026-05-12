@@ -171,7 +171,7 @@ export const products = [
   {
     id: 14,
     img: "/images/img14.webp",
-    name: "Stainless Steel Water Bottle",
+    name: "Stainless Steel Water Bottle",git 
     price: "34.99",
     category: "accessories",
     rating: 4.7,

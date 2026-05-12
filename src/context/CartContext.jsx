@@ -109,6 +109,7 @@ export const CartProvider = ({ children }) => {
      (sum of quantities), and `subtotal` is the price total. The old context
      conflated these — splitting them prevents the bug where the cart page
      shows item count where the price should be. */
+     
   const { totalItems, subtotal } = useMemo(() => {
     let count = 0;
     let sum = 0;
