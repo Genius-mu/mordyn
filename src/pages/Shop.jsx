@@ -225,7 +225,7 @@ const Shop = () => {
       </section>
 
       {/* ====================== STICKY FILTER BAR ====================== */}
-      <div className="sticky top-[5em] z-30 bg-white/85 backdrop-blur-md border-b border-neutral-200">
+      <div className="sticky top-16 z-30 bg-white/85 backdrop-blur-md border-b border-neutral-200">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm">
             <SlidersHorizontal
