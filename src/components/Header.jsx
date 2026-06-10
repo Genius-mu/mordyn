@@ -24,8 +24,6 @@ const navLinks = [
   { label: "Contact", to: "/contact", icon: Phone },
 ];
 
-const ANNOUNCEMENT_HEIGHT = 28; // px — matches h-7 (1.75rem at 16px root)
-
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -84,11 +82,11 @@ const Header = () => {
   return (
     <>
       {/* ============================ ANNOUNCEMENT BAR ============================ */}
-      {/* Slides up out of view when scrolled, taking its space with it.
-          Header moves up to fill the gap via the wrapper transform below. */}
+      {/* Desktop-only. Height is 0 on mobile so it never paints a black strip
+          behind the header. Collapses on scroll on desktop. */}
       <div
-        className="fixed top-0 left-0 right-0 z-[51] bg-neutral-950 text-white text-[11px] tracking-[0.25em] uppercase overflow-hidden transition-[height] duration-300 ease-out"
-        style={{ height: scrolled ? 0 : ANNOUNCEMENT_HEIGHT }}
+        className={`fixed top-0 left-0 right-0 z-[51] bg-neutral-950 text-white text-[11px] tracking-[0.25em] uppercase overflow-hidden transition-[height] duration-300 ease-out
+          ${scrolled ? "h-0" : "h-0 md:h-7"}`}
         aria-hidden={scrolled}
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 h-7 hidden md:flex items-center justify-center gap-2">
@@ -99,32 +97,22 @@ const Header = () => {
       </div>
 
       {/* ============================ HEADER ============================ */}
-      {/* Header is always `top-0` — the announcement bar pushes it down by
-          shrinking its own height. This avoids the previous jumpy "top-7 →
-          top-0" transition and the issue where the bar still occupied space
-          after scroll. */}
+      {/* Top position is CSS-driven (no JS matchMedia) so there's no
+          hydration flash and it responds to resize automatically.
+          Mobile: always top:0. Desktop: top:7 when not scrolled, top:0 when scrolled. */}
       <header
-        className={`fixed left-0 right-0 z-50 transition-[background-color,border-color,backdrop-filter,top] duration-300 ease-out
+        className={`fixed left-0 right-0 z-50 transition-[background-color,border-color,backdrop-filter,top,box-shadow] duration-300 ease-out
+          ${scrolled ? "top-0" : "top-0 md:top-7"}
           ${
             scrolled
-              ? "bg-white/85 backdrop-blur-lg border-b border-neutral-200/80 shadow-[0_4px_20px_-12px_rgba(0,0,0,0.1)]"
-              : "bg-white border-b border-transparent"
+              ? "bg-white/85 backdrop-blur-lg border-b border-neutral-200/80 shadow-[0_4px_20px_-12px_rgba(0,0,0,0.12)]"
+              : "bg-white border-b border-neutral-100 md:border-transparent"
           }`}
-        style={{
-          // Sit below the announcement bar on desktop when not scrolled.
-          // On mobile the bar is hidden so always top:0.
-          top:
-            scrolled || typeof window === "undefined"
-              ? 0
-              : window.matchMedia("(min-width: 768px)").matches
-                ? ANNOUNCEMENT_HEIGHT
-                : 0,
-        }}
       >
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12">
           <div
             className={`flex justify-between items-center transition-[height] duration-300 ease-out ${
-              scrolled ? "h-[4.25em]" : "h-[5em]"
+              scrolled ? "h-14 md:h-[4.25em]" : "h-16 md:h-[5em]"
             }`}
           >
             {/* Logo */}
@@ -132,8 +120,8 @@ const Header = () => {
               <span
                 className={`font-serif tracking-tight text-neutral-950 group-hover:text-[#ff4500] transition-all duration-300 ${
                   scrolled
-                    ? "text-2xl md:text-[1.625rem]"
-                    : "text-2xl md:text-3xl"
+                    ? "text-xl md:text-[1.625rem]"
+                    : "text-[1.375rem] md:text-3xl"
                 }`}
               >
                 Mordyn
@@ -176,17 +164,17 @@ const Header = () => {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-1 shrink-0">
-              {/* Search */}
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+              {/* Search — now always visible (mobile users search a lot) */}
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
-                className="hidden sm:flex w-10 h-10 items-center justify-center rounded-full text-neutral-700 hover:text-[#ff4500] hover:bg-neutral-100 transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-full text-neutral-700 hover:text-[#ff4500] hover:bg-neutral-100 transition-colors"
               >
                 <Search size={19} strokeWidth={1.6} />
               </button>
 
-              {/* Account */}
+              {/* Account — still desktop/tablet only */}
               <button
                 aria-label="Account"
                 className="hidden sm:flex w-10 h-10 items-center justify-center rounded-full text-neutral-700 hover:text-[#ff4500] hover:bg-neutral-100 transition-colors"
@@ -239,7 +227,7 @@ const Header = () => {
               <button
                 aria-label={isOpen ? "Close menu" : "Open menu"}
                 aria-expanded={isOpen}
-                className="lg:hidden ml-1 w-10 h-10 flex items-center justify-center rounded-full text-neutral-900 hover:bg-neutral-100 transition-colors"
+                className="lg:hidden ml-0.5 w-10 h-10 flex items-center justify-center rounded-full text-neutral-900 hover:bg-neutral-100 transition-colors"
                 onClick={() => setIsOpen((p) => !p)}
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -292,10 +280,10 @@ const Header = () => {
               transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
               className="fixed top-0 left-0 right-0 z-[61] bg-white border-b border-neutral-200"
             >
-              <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-6">
+              <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 py-5 md:py-6">
                 <form
                   onSubmit={handleSearchSubmit}
-                  className="flex items-center gap-4"
+                  className="flex items-center gap-3 md:gap-4"
                 >
                   <Search
                     size={22}
@@ -308,7 +296,7 @@ const Header = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search the catalogue…"
-                    className="flex-1 bg-transparent text-xl md:text-2xl font-serif placeholder:text-neutral-400 outline-none py-2"
+                    className="flex-1 min-w-0 bg-transparent text-lg md:text-2xl font-serif placeholder:text-neutral-400 outline-none py-2"
                   />
                   <button
                     type="button"
